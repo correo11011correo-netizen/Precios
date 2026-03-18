@@ -13,11 +13,13 @@
   </style>
   <!-- Google Identity Services -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <!-- Configuración -->
+  <script src="config.js"></script>
 </head>
 <body>
   <h2>Login con Google</h2>
   <div id="g_id_onload"
-       data-client_id="527108731574-nvkf2sovotbn1vtq7fnh42o6ujkt9lj7.apps.googleusercontent.com"
+       data-client_id=""
        data-context="signin"
        data-ux_mode="popup"
        data-callback="handleCredentialResponse"
@@ -41,8 +43,6 @@
   <div id="logs"></div>
 
   <script>
-    // URL de tu Web App desplegado
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxcL5lyGuJkPDCoRVdpmrVAj8hv_2g8IbOZFW3JhlsaQAsN8YlwA2hA2iOjnDM7pYJy/exec";
     let idToken = null;
 
     function log(msg, type="info") {
@@ -78,11 +78,11 @@
       const data = {
         nombre: document.getElementById("nombre").value,
         mensaje: document.getElementById("mensaje").value,
-        token: idToken // se envía el token de Google
+        token: idToken
       };
       log("Enviando datos: " + JSON.stringify(data), "info");
 
-      fetch(SCRIPT_URL, {
+      fetch(CONFIG.SCRIPT_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
@@ -94,10 +94,13 @@
     // Test de conexión (GET)
     document.getElementById("testBtn").addEventListener("click", function(){
       log("Probando conexión con Apps Script...", "info");
-      fetch(SCRIPT_URL)
+      fetch(CONFIG.SCRIPT_URL)
         .then(res => { logResponse(res); })
         .catch(err => log("Error de red en test: " + err, "error"));
     });
+
+    // Ajustar el client_id dinámicamente
+    document.getElementById("g_id_onload").setAttribute("data-client_id", CONFIG.CLIENT_ID);
   </script>
 </body>
 </html>
