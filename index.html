@@ -3,6 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <title>Formulario conectado a Drive</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    #logs { background: #f4f4f4; padding: 10px; border: 1px solid #ccc; margin-top: 20px; }
+    pre { white-space: pre-wrap; word-wrap: break-word; }
+  </style>
 </head>
 <body>
   <h2>Enviar datos a Drive</h2>
@@ -18,38 +23,53 @@
   <button id="leerBtn">Leer archivo</button>
   <pre id="contenido"></pre>
 
-  <script>
-    // URL de tu Apps Script publicado como Web App
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzudQ5fqVvmH8l3ZGVjOQSMMu3uYRKYaWRZ2w86UC_nk9et6ol6t8WlYF1PKquevYzh/exec";
+  <h2>Logs</h2>
+  <div id="logs"></div>
 
-    // URL pública del archivo datos.txt en Drive
-    // Reemplazá TU_ID_DE_ARCHIVO por el ID real del archivo datos.txt compartido públicamente
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzudQ5fqVvmH8l3ZGVjOQSMMu3uYRKYaWRZ2w86UC_nk9et6ol6t8WlYF1PKquevYzh/exec";
     const DRIVE_FILE_URL = "https://drive.google.com/uc?export=download&id=TU_ID_DE_ARCHIVO";
 
-    // Enviar datos al Apps Script
+    function log(msg) {
+      const logs = document.getElementById("logs");
+      logs.innerHTML += "<pre>" + msg + "</pre>";
+    }
+
     document.getElementById("dataForm").addEventListener("submit", function(e){
       e.preventDefault();
       const data = {
         nombre: document.getElementById("nombre").value,
         mensaje: document.getElementById("mensaje").value
       };
+      log("Enviando datos: " + JSON.stringify(data));
+
       fetch(SCRIPT_URL, {
         method: "POST",
         body: JSON.stringify(data)
       })
       .then(res => res.text())
-      .then(txt => alert("Respuesta del servidor: " + txt))
-      .catch(err => console.error(err));
+      .then(txt => {
+        log("Respuesta del servidor: " + txt);
+        alert("Respuesta: " + txt);
+      })
+      .catch(err => {
+        log("Error: " + err);
+        console.error(err);
+      });
     });
 
-    // Leer archivo público de Drive
     document.getElementById("leerBtn").addEventListener("click", function(){
+      log("Leyendo archivo público de Drive...");
       fetch(DRIVE_FILE_URL)
         .then(res => res.text())
         .then(txt => {
           document.getElementById("contenido").textContent = txt;
+          log("Contenido leído correctamente.");
         })
-        .catch(err => console.error(err));
+        .catch(err => {
+          log("Error al leer archivo: " + err);
+          console.error(err);
+        });
     });
   </script>
 </body>
