@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Formulario simple</title>
+  <title>Formulario conectado a Drive</title>
 </head>
 <body>
   <h2>Enviar datos a Drive</h2>
@@ -19,9 +19,13 @@
   <pre id="contenido"></pre>
 
   <script>
-    // URL del Apps Script publicado como Web App (ejemplo)
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxxxxxxx/exec";
+    // URL de tu Apps Script publicado como Web App
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbXXXXXXXXXXXX/exec";
 
+    // URL pública del archivo datos.txt en Drive (compartido como "cualquiera con el enlace puede ver")
+    const DRIVE_FILE_URL = "https://drive.google.com/uc?export=download&id=TU_ID_DE_ARCHIVO";
+
+    // Enviar datos al Apps Script
     document.getElementById("dataForm").addEventListener("submit", function(e){
       e.preventDefault();
       const data = {
@@ -37,9 +41,7 @@
       .catch(err => console.error(err));
     });
 
-    // Lectura de archivo público en Drive (ejemplo: txt/json compartido con link público)
-    const DRIVE_FILE_URL = "https://drive.google.com/uc?export=download&id=TU_ID_DE_ARCHIVO";
-
+    // Leer archivo público de Drive
     document.getElementById("leerBtn").addEventListener("click", function(){
       fetch(DRIVE_FILE_URL)
         .then(res => res.text())
