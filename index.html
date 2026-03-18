@@ -80,6 +80,7 @@
       .then(res => res.json())
       .then(json => {
         log("Estado: " + json.estado, json.estado === "ok" ? "ok" : "error");
+        if (json.mensaje) log("Mensaje: " + json.mensaje, "info");
         if (json.error) log("Error: " + json.error, "error");
         if (json.pasos) json.pasos.forEach(p => log(p, "info"));
       })
@@ -102,9 +103,10 @@
     document.getElementById("testBtn").addEventListener("click", function(){
       log("Probando conexión con Apps Script...", "info");
       fetch(SCRIPT_URL)
-        .then(res => res.text())
-        .then(txt => {
-          log("Respuesta cruda: " + txt, "info");
+        .then(res => res.json())
+        .then(json => {
+          log("Estado: " + json.estado, json.estado === "ok" ? "ok" : "error");
+          if (json.mensaje) log("Mensaje: " + json.mensaje, "info");
         })
         .catch(err => log("Error de red en test: " + err, "error"));
     });
