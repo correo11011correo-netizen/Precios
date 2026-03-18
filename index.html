@@ -2,14 +2,26 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Formulario conectado a Drive</title>
+  <title>Formulario con Google Auth</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
     #logs { background: #f4f4f4; padding: 10px; border: 1px solid #ccc; margin-top: 20px; }
     pre { white-space: pre-wrap; word-wrap: break-word; }
   </style>
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
+  <h2>Login con Google</h2>
+  <div id="g_id_onload"
+       data-client_id="527108731574-nvkf2sovotbn1vtq7fnh42o6ujkt9lj7.apps.googleusercontent.com"
+       data-context="signin"
+       data-ux_mode="popup"
+       data-callback="handleCredentialResponse"
+       data-auto_prompt="false">
+  </div>
+  <div class="g_id_signin" data-type="standard"></div>
+
   <h2>Enviar datos a Drive</h2>
   <form id="dataForm">
     <label>Nombre:</label>
@@ -30,13 +42,26 @@
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzudQ5fqVvmH8l3ZGVjOQSMMu3uYRKYaWRZ2w86UC_nk9et6ol6t8WlYF1PKquevYzh/exec";
     const DRIVE_FILE_URL = "https://drive.google.com/uc?export=download&id=TU_ID_DE_ARCHIVO";
 
+    let idToken = null; // token de Google
+
     function log(msg) {
       const logs = document.getElementById("logs");
       logs.innerHTML += "<pre>" + msg + "</pre>";
     }
 
+    // Callback de Google Identity Services
+    function handleCredentialResponse(response) {
+      idToken = response.credential;
+      log("Login exitoso. Token recibido.");
+    }
+
+    // Enviar datos al Apps Script con token
     document.getElementById("dataForm").addEventListener("submit", function(e){
       e.preventDefault();
+      if (!idToken) {
+        alert("Primero iniciá sesión con Google.");
+        return;
+      }
       const data = {
         nombre: document.getElementById("nombre").value,
         mensaje: document.getElementById("mensaje").value
@@ -45,6 +70,10 @@
 
       fetch(SCRIPT_URL, {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + idToken
+        },
         body: JSON.stringify(data)
       })
       .then(res => res.text())
@@ -58,6 +87,7 @@
       });
     });
 
+    // Leer archivo público de Drive
     document.getElementById("leerBtn").addEventListener("click", function(){
       log("Leyendo archivo público de Drive...");
       fetch(DRIVE_FILE_URL)
