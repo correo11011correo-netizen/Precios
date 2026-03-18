@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Formulario simple</title>
+</head>
+<body>
+  <h2>Enviar datos a Drive</h2>
+  <form id="dataForm">
+    <label>Nombre:</label>
+    <input type="text" id="nombre" required><br><br>
+    <label>Mensaje:</label>
+    <input type="text" id="mensaje" required><br><br>
+    <button type="submit">Enviar</button>
+  </form>
+
+  <h2>Leer archivo público de Drive</h2>
+  <button id="leerBtn">Leer archivo</button>
+  <pre id="contenido"></pre>
+
+  <script>
+    // URL del Apps Script publicado como Web App (ejemplo)
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxxxxxxx/exec";
+
+    document.getElementById("dataForm").addEventListener("submit", function(e){
+      e.preventDefault();
+      const data = {
+        nombre: document.getElementById("nombre").value,
+        mensaje: document.getElementById("mensaje").value
+      };
+      fetch(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify(data)
+      })
+      .then(res => res.text())
+      .then(txt => alert("Respuesta del servidor: " + txt))
+      .catch(err => console.error(err));
+    });
+
+    // Lectura de archivo público en Drive (ejemplo: txt/json compartido con link público)
+    const DRIVE_FILE_URL = "https://drive.google.com/uc?export=download&id=TU_ID_DE_ARCHIVO";
+
+    document.getElementById("leerBtn").addEventListener("click", function(){
+      fetch(DRIVE_FILE_URL)
+        .then(res => res.text())
+        .then(txt => {
+          document.getElementById("contenido").textContent = txt;
+        })
+        .catch(err => console.error(err));
+    });
+  </script>
+</body>
+</html>
