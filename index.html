@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Test conexión con Apps Script (Library)</title>
+  <title>Test conexión con Apps Script (Library + Google Auth)</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
     #logs { background: #f4f4f4; padding: 10px; border: 1px solid #ccc; margin-top: 20px; max-height: 300px; overflow-y: auto; }
@@ -11,8 +11,20 @@
     .error { color: red; }
     .info { color: blue; }
   </style>
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
+  <h2>Login con Google</h2>
+  <div id="g_id_onload"
+       data-client_id="TU_CLIENT_ID.apps.googleusercontent.com"
+       data-context="signin"
+       data-ux_mode="popup"
+       data-callback="handleCredentialResponse"
+       data-auto_prompt="false">
+  </div>
+  <div class="g_id_signin" data-type="standard"></div>
+
   <h2>Enviar datos a Drive</h2>
   <form id="dataForm">
     <label>Nombre:</label>
@@ -31,6 +43,7 @@
   <script>
     // Nuevo enlace de la Library
     const SCRIPT_URL = "https://script.google.com/macros/library/d/1uDHBoemnYhE2ErYFza6ng2yHypJn-htTxr614iEmfKopGtR8ftXYCpq4/1/exec";
+    let idToken = null;
 
     function log(msg, type="info") {
       const logs = document.getElementById("logs");
@@ -41,7 +54,11 @@
       logs.scrollTop = logs.scrollHeight;
     }
 
-    // Función para mostrar respuesta cruda y parseada
+    function handleCredentialResponse(response) {
+      idToken = response.credential;
+      log("Login exitoso. Token recibido.", "ok");
+    }
+
     function logResponse(res) {
       log("Status: " + res.status + " " + res.statusText, res.ok ? "ok" : "error");
       res.text().then(txt => {
@@ -60,7 +77,8 @@
       e.preventDefault();
       const data = {
         nombre: document.getElementById("nombre").value,
-        mensaje: document.getElementById("mensaje").value
+        mensaje: document.getElementById("mensaje").value,
+        token: idToken // se envía el token de Google
       };
       log("Enviando datos: " + JSON.stringify(data), "info");
 
