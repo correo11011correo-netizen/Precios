@@ -2,11 +2,13 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Formulario con Google Auth</title>
+  <title>Formulario con Google Auth + Logs</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
-    #logs { background: #f4f4f4; padding: 10px; border: 1px solid #ccc; margin-top: 20px; }
-    pre { white-space: pre-wrap; word-wrap: break-word; }
+    #logs { background: #f4f4f4; padding: 10px; border: 1px solid #ccc; margin-top: 20px; max-height: 300px; overflow-y: auto; }
+    pre { white-space: pre-wrap; word-wrap: break-word; margin: 0; }
+    .ok { color: green; }
+    .error { color: red; }
   </style>
   <!-- Google Identity Services -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -44,15 +46,20 @@
 
     let idToken = null; // token de Google
 
-    function log(msg) {
+    function log(msg, type="info") {
       const logs = document.getElementById("logs");
-      logs.innerHTML += "<pre>" + msg + "</pre>";
+      const line = document.createElement("pre");
+      line.textContent = msg;
+      if (type === "ok") line.classList.add("ok");
+      if (type === "error") line.classList.add("error");
+      logs.appendChild(line);
+      logs.scrollTop = logs.scrollHeight;
     }
 
     // Callback de Google Identity Services
     function handleCredentialResponse(response) {
       idToken = response.credential;
-      log("Login exitoso. Token recibido.");
+      log("Login exitoso. Token recibido.", "ok");
     }
 
     // Enviar datos al Apps Script con token
@@ -76,14 +83,18 @@
         },
         body: JSON.stringify(data)
       })
-      .then(res => res.text())
-      .then(txt => {
-        log("Respuesta del servidor: " + txt);
-        alert("Respuesta: " + txt);
+      .then(res => res.json())
+      .then(json => {
+        log("Estado: " + json.estado, json.estado === "ok" ? "ok" : "error");
+        if (json.error) {
+          log("Error: " + json.error, "error");
+        }
+        if (json.pasos) {
+          json.pasos.forEach(p => log(p));
+        }
       })
       .catch(err => {
-        log("Error: " + err);
-        console.error(err);
+        log("Error de red: " + err, "error");
       });
     });
 
@@ -91,14 +102,13 @@
     document.getElementById("leerBtn").addEventListener("click", function(){
       log("Leyendo archivo público de Drive...");
       fetch(DRIVE_FILE_URL)
-        .then(res => res.text())
-        .then(txt => {
-          document.getElementById("contenido").textContent = txt;
-          log("Contenido leído correctamente.");
+        .then(res => res.json())
+        .then(json => {
+          document.getElementById("contenido").textContent = JSON.stringify(json, null, 2);
+          log("Contenido leído correctamente.", "ok");
         })
         .catch(err => {
-          log("Error al leer archivo: " + err);
-          console.error(err);
+          log("Error al leer archivo: " + err, "error");
         });
     });
   </script>
