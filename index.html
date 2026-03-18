@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Test conexión con Apps Script</title>
+  <title>Test conexión con Apps Script (Library)</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
     #logs { background: #f4f4f4; padding: 10px; border: 1px solid #ccc; margin-top: 20px; max-height: 300px; overflow-y: auto; }
@@ -11,19 +11,8 @@
     .error { color: red; }
     .info { color: blue; }
   </style>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
-  <h2>Login con Google</h2>
-  <div id="g_id_onload"
-       data-client_id="527108731574-nvkf2sovotbn1vtq7fnh42o6ujkt9lj7.apps.googleusercontent.com"
-       data-context="signin"
-       data-ux_mode="popup"
-       data-callback="handleCredentialResponse"
-       data-auto_prompt="false">
-  </div>
-  <div class="g_id_signin" data-type="standard"></div>
-
   <h2>Enviar datos a Drive</h2>
   <form id="dataForm">
     <label>Nombre:</label>
@@ -33,10 +22,6 @@
     <button type="submit">Enviar</button>
   </form>
 
-  <h2>Leer archivo público de Drive</h2>
-  <button id="leerBtn">Leer archivo</button>
-  <pre id="contenido"></pre>
-
   <h2>Test de conexión con Apps Script</h2>
   <button id="testBtn">Probar conexión</button>
 
@@ -44,10 +29,8 @@
   <div id="logs"></div>
 
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzudQ5fqVvmH8l3ZGVjOQSMMu3uYRKYaWRZ2w86UC_nk9et6ol6t8WlYF1PKquevYzh/exec";
-    const DRIVE_FILE_URL = "https://drive.google.com/uc?export=download&id=TU_ID_DE_ARCHIVO";
-
-    let idToken = null;
+    // Nuevo enlace de la Library
+    const SCRIPT_URL = "https://script.google.com/macros/library/d/1uDHBoemnYhE2ErYFza6ng2yHypJn-htTxr614iEmfKopGtR8ftXYCpq4/1/exec";
 
     function log(msg, type="info") {
       const logs = document.getElementById("logs");
@@ -58,12 +41,21 @@
       logs.scrollTop = logs.scrollHeight;
     }
 
-    function handleCredentialResponse(response) {
-      idToken = response.credential;
-      log("Login exitoso. Token recibido.", "ok");
+    // Función para mostrar respuesta cruda y parseada
+    function logResponse(res) {
+      log("Status: " + res.status + " " + res.statusText, res.ok ? "ok" : "error");
+      res.text().then(txt => {
+        log("Respuesta cruda: " + txt, "info");
+        try {
+          const json = JSON.parse(txt);
+          log("JSON parseado: " + JSON.stringify(json, null, 2), "info");
+        } catch (err) {
+          log("No se pudo parsear JSON: " + err, "error");
+        }
+      });
     }
 
-    // Enviar datos
+    // Enviar datos (POST)
     document.getElementById("dataForm").addEventListener("submit", function(e){
       e.preventDefault();
       const data = {
@@ -77,37 +69,15 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
       })
-      .then(res => res.json())
-      .then(json => {
-        log("Estado: " + json.estado, json.estado === "ok" ? "ok" : "error");
-        if (json.mensaje) log("Mensaje: " + json.mensaje, "info");
-        if (json.error) log("Error: " + json.error, "error");
-        if (json.pasos) json.pasos.forEach(p => log(p, "info"));
-      })
+      .then(res => { logResponse(res); })
       .catch(err => log("Error de red: " + err, "error"));
     });
 
-    // Leer archivo
-    document.getElementById("leerBtn").addEventListener("click", function(){
-      log("Leyendo archivo público de Drive...", "info");
-      fetch(DRIVE_FILE_URL)
-        .then(res => res.json())
-        .then(json => {
-          document.getElementById("contenido").textContent = JSON.stringify(json, null, 2);
-          log("Contenido leído correctamente.", "ok");
-        })
-        .catch(err => log("Error al leer archivo: " + err, "error"));
-    });
-
-    // Test de conexión
+    // Test de conexión (GET)
     document.getElementById("testBtn").addEventListener("click", function(){
       log("Probando conexión con Apps Script...", "info");
       fetch(SCRIPT_URL)
-        .then(res => res.json())
-        .then(json => {
-          log("Estado: " + json.estado, json.estado === "ok" ? "ok" : "error");
-          if (json.mensaje) log("Mensaje: " + json.mensaje, "info");
-        })
+        .then(res => { logResponse(res); })
         .catch(err => log("Error de red en test: " + err, "error"));
     });
   </script>
