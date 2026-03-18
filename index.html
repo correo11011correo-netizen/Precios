@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Test conexión con Apps Script (Library + Google Auth)</title>
+  <title>Conexión con Apps Script (Web App + Google Auth)</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
     #logs { background: #f4f4f4; padding: 10px; border: 1px solid #ccc; margin-top: 20px; max-height: 300px; overflow-y: auto; }
@@ -41,8 +41,8 @@
   <div id="logs"></div>
 
   <script>
-    // Nuevo enlace de la Library
-    const SCRIPT_URL = "https://script.google.com/macros/library/d/1uDHBoemnYhE2ErYFza6ng2yHypJn-htTxr614iEmfKopGtR8ftXYCpq4/1/exec";
+    // URL de tu Web App desplegado
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxcL5lyGuJkPDCoRVdpmrVAj8hv_2g8IbOZFW3JhlsaQAsN8YlwA2hA2iOjnDM7pYJy/exec";
     let idToken = null;
 
     function log(msg, type="info") {
