@@ -1,106 +1,72 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
   <meta charset="UTF-8">
-  <title>Conexión con Apps Script (Web App + Google Auth)</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    #logs { background: #f4f4f4; padding: 10px; border: 1px solid #ccc; margin-top: 20px; max-height: 300px; overflow-y: auto; }
-    pre { white-space: pre-wrap; word-wrap: break-word; margin: 0; }
-    .ok { color: green; }
-    .error { color: red; }
-    .info { color: blue; }
-  </style>
-  <!-- Google Identity Services -->
+  <title>Proyecto Drive Autorizado</title>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <!-- Configuración -->
   <script src="config.js"></script>
+  <style>
+    #authNotice {
+      display: none;
+      background: #ffe0e0;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #cc0000;
+    }
+  </style>
 </head>
 <body>
-  <h2>Login con Google</h2>
+  <h1>Login y escritura en Drive</h1>
+
   <div id="g_id_onload"
-       data-client_id=""
-       data-context="signin"
-       data-ux_mode="popup"
-       data-callback="handleCredentialResponse"
-       data-auto_prompt="false">
+       data-client_id="527108731574-nvkf2sovotbn1vtq7fnh42o6ujkt9lj7.apps.googleusercontent.com"
+       data-callback="handleCredentialResponse">
   </div>
   <div class="g_id_signin" data-type="standard"></div>
 
-  <h2>Enviar datos a Drive</h2>
-  <form id="dataForm">
-    <label>Nombre:</label>
-    <input type="text" id="nombre" required><br><br>
-    <label>Mensaje:</label>
-    <input type="text" id="mensaje" required><br><br>
+  <div id="authNotice">
+    ⚠️ Este proyecto necesita autorización de Drive.  
+    Ejecutá una vez la función <b>initAuth</b> en el editor de Apps Script para conceder permisos.
+  </div>
+
+  <form id="formulario">
+    <input type="text" id="nombre" placeholder="Nombre">
+    <input type="text" id="mensaje" placeholder="Mensaje">
     <button type="submit">Enviar</button>
   </form>
 
-  <h2>Test de conexión con Apps Script</h2>
-  <button id="testBtn">Probar conexión</button>
-
-  <h2>Logs</h2>
-  <div id="logs"></div>
+  <pre id="resultado"></pre>
 
   <script>
     let idToken = null;
 
-    function log(msg, type="info") {
-      const logs = document.getElementById("logs");
-      const line = document.createElement("pre");
-      line.textContent = msg;
-      line.classList.add(type);
-      logs.appendChild(line);
-      logs.scrollTop = logs.scrollHeight;
-    }
-
     function handleCredentialResponse(response) {
       idToken = response.credential;
-      log("Login exitoso. Token recibido.", "ok");
+      document.getElementById("resultado").textContent = "Login exitoso. Token recibido.";
+      document.getElementById("authNotice").style.display = "block";
     }
 
-    function logResponse(res) {
-      log("Status: " + res.status + " " + res.statusText, res.ok ? "ok" : "error");
-      res.text().then(txt => {
-        log("Respuesta cruda: " + txt, "info");
-        try {
-          const json = JSON.parse(txt);
-          log("JSON parseado: " + JSON.stringify(json, null, 2), "info");
-        } catch (err) {
-          log("No se pudo parsear JSON: " + err, "error");
-        }
-      });
-    }
-
-    // Enviar datos (POST)
-    document.getElementById("dataForm").addEventListener("submit", function(e){
+    document.getElementById("formulario").addEventListener("submit", async (e) => {
       e.preventDefault();
+      if (!idToken) {
+        alert("Primero inicia sesión con Google");
+        return;
+      }
+
       const data = {
+        token: idToken,
         nombre: document.getElementById("nombre").value,
-        mensaje: document.getElementById("mensaje").value,
-        token: idToken
+        mensaje: document.getElementById("mensaje").value
       };
-      log("Enviando datos: " + JSON.stringify(data), "info");
 
-      fetch(CONFIG.SCRIPT_URL, {
+      const res = await fetch(CONFIG.SCRIPT_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
-      })
-      .then(res => { logResponse(res); })
-      .catch(err => log("Error de red: " + err, "error"));
-    });
+      });
 
-    // Test de conexión (GET)
-    document.getElementById("testBtn").addEventListener("click", function(){
-      log("Probando conexión con Apps Script...", "info");
-      fetch(CONFIG.SCRIPT_URL)
-        .then(res => { logResponse(res); })
-        .catch(err => log("Error de red en test: " + err, "error"));
+      const json = await res.json();
+      document.getElementById("resultado").textContent = JSON.stringify(json, null, 2);
     });
-
-    // Ajustar el client_id dinámicamente
-    document.getElementById("g_id_onload").setAttribute("data-client_id", CONFIG.CLIENT_ID);
   </script>
 </body>
 </html>
