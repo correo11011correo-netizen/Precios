@@ -5,35 +5,32 @@
   <title>Proyecto Drive Autorizado</title>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="config.js"></script>
-  <style>
-    #authNotice {
-      display: none;
-      background: #ffe0e0;
-      padding: 10px;
-      margin: 10px 0;
-      border: 1px solid #cc0000;
-    }
-  </style>
 </head>
 <body>
   <h1>Login y escritura en Drive</h1>
 
+  <!-- Botón de login con Google -->
   <div id="g_id_onload"
        data-client_id="527108731574-nvkf2sovotbn1vtq7fnh42o6ujkt9lj7.apps.googleusercontent.com"
        data-callback="handleCredentialResponse">
   </div>
   <div class="g_id_signin" data-type="standard"></div>
 
-  <div id="authNotice">
+  <!-- Aviso de autorización -->
+  <div id="authNotice" style="display:none; background:#ffe0e0; padding:10px; margin:10px 0;">
     ⚠️ Este proyecto necesita autorización de Drive.  
     Ejecutá una vez la función <b>initAuth</b> en el editor de Apps Script para conceder permisos.
   </div>
 
+  <!-- Formulario de escritura -->
   <form id="formulario">
     <input type="text" id="nombre" placeholder="Nombre">
     <input type="text" id="mensaje" placeholder="Mensaje">
     <button type="submit">Enviar</button>
   </form>
+
+  <!-- Botón de test de conexión -->
+  <button id="testBtn">🔍 Test de conexión completo</button>
 
   <pre id="resultado"></pre>
 
@@ -46,6 +43,7 @@
       document.getElementById("authNotice").style.display = "block";
     }
 
+    // Enviar datos al Web App
     document.getElementById("formulario").addEventListener("submit", async (e) => {
       e.preventDefault();
       if (!idToken) {
@@ -65,7 +63,26 @@
       });
 
       const json = await res.json();
-      document.getElementById("resultado").textContent = JSON.stringify(json, null, 2);
+      document.getElementById("resultado").textContent = "Escritura en Drive:\n" + JSON.stringify(json, null, 2);
+    });
+
+    // Test de conexión completo
+    document.getElementById("testBtn").addEventListener("click", async () => {
+      try {
+        // 1. Test de conexión con el Web App
+        const resTest = await fetch(CONFIG.SCRIPT_URL + "?test=1");
+        const jsonTest = await resTest.json();
+
+        // 2. Lectura de datos.txt con doGet
+        const resGet = await fetch(CONFIG.SCRIPT_URL);
+        const jsonGet = await resGet.json();
+
+        document.getElementById("resultado").textContent =
+          "Resultado testConnection:\n" + JSON.stringify(jsonTest, null, 2) +
+          "\n\nContenido de datos.txt:\n" + JSON.stringify(jsonGet, null, 2);
+      } catch (err) {
+        document.getElementById("resultado").textContent = "Error en test: " + err;
+      }
     });
   </script>
 </body>
